@@ -13,19 +13,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import {
-    ArrowUpDown,
-    CheckCheck,
-    ChevronDown,
-    Eye,
-    PenIcon,
-    RefreshCw,
-    Search,
-    Timer,
-    TimerIcon,
-    University,
-    XCircle,
-} from 'lucide-react';
+import { ArrowUpDown, CheckCheck, ChevronDown, Eye, RefreshCw, Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {

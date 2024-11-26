@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Separator } from '@/components/ui/separator';
 import { ModeToggle } from '@/containers/ModeToggle';
-import axios from 'axios';
 import '@/components/pulse.css';
 import { Loader2 } from 'lucide-react';
 import supabase from '@/config/supabase';

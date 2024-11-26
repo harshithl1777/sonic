@@ -124,7 +124,7 @@ export default function SettingsForm() {
                 <FormField
                     control={form.control}
                     name='name_3801899365'
-                    render={({ field }) => (
+                    render={() => (
                         <FormItem>
                             <FormLabel>Resume</FormLabel>
                             <FormControl>

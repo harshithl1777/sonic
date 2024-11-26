@@ -6,7 +6,6 @@ import { EmailHistoryChart } from '@/containers/EmailHistoryChart';
 import { UniversityCountsChart } from '@/containers/UniversityCountsChart';
 import { CheckCheck, CircleFadingArrowUp, InboxIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 type Record = {
     created_at: Date;

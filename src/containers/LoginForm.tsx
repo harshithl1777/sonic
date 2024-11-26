@@ -19,7 +19,6 @@ export function LoginForm() {
     const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        // Reset errors
         setEmailError(null);
         setPasswordError(null);
 

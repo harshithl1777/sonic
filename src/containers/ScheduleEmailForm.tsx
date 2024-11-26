@@ -1,10 +1,8 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -271,7 +269,7 @@ export default function ScheduleEmailForm({
                                 <FormField
                                     control={form.control}
                                     name='sendAt'
-                                    render={({ field }) => (
+                                    render={() => (
                                         <FormItem className='flex flex-col'>
                                             <FormLabel className={sendImmediately ? 'text-slate-500' : ''}>
                                                 Delivery Date & Time
@@ -355,7 +353,7 @@ export default function ScheduleEmailForm({
                                     <FormField
                                         control={form.control}
                                         name='sendAt'
-                                        render={({ field }) => (
+                                        render={() => (
                                             <FormItem className=''>
                                                 <FormLabel className={sendImmediately ? 'text-slate-500' : ''}>
                                                     Delivery Date & Time

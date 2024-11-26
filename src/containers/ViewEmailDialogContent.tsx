@@ -80,7 +80,7 @@ export const ViewEmailDialogContent = ({ row, close }: { row: Row; close: Functi
                             <FormField
                                 name='send_at'
                                 control={form.control}
-                                render={({ field }) => (
+                                render={() => (
                                     <FormItem className=''>
                                         <FormLabel>{row.status === 'PENDING' ? 'Send At' : 'Sent At'}</FormLabel>
                                         <FormControl>

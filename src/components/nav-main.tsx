@@ -50,7 +50,7 @@ export function NavMain({
                         <Collapsible
                             key={item.title}
                             asChild
-                            defaultOpen={item.items?.filter((item) => item.url === pathname).length > 0}
+                            defaultOpen={item.items!.filter((item) => item.url === pathname).length > 0}
                             className='group/collapsible'
                         >
                             <SidebarMenuItem>
