@@ -48,10 +48,10 @@ export function LoginForm() {
                     description: 'Redirecting to your dashboard...',
                 });
 
-                // Redirect after a short delay
                 setTimeout(() => {
-                    navigate('/app/home');
+                    navigate('/app/dashboard');
                 }, 1000);
+                s;
             }
         } catch (error) {
             setPasswordError('Unexpected error occurred. Please try again.');
