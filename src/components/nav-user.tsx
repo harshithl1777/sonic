@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronsUpDown, LogOut } from 'lucide-react';
+import { ChevronsUpDown, Loader2, LogOut } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -12,6 +12,8 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
+import supabase from '@/config/supabase';
+import { useState } from 'react';
 
 export function NavUser({
     user,
@@ -23,6 +25,13 @@ export function NavUser({
     };
 }) {
     const { isMobile } = useSidebar();
+    const [loading, setLoading] = useState(false);
+
+    const signOut = async () => {
+        setLoading(true);
+        await supabase.auth.signOut();
+        window.location.href = '/auth/login';
+    };
 
     return (
         <SidebarMenu>
@@ -64,8 +73,8 @@ export function NavUser({
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>
-                            <LogOut />
-                            Log out
+                            {loading ? <Loader2 className='animate-spin' /> : <LogOut />}
+                            <h3 onClick={() => signOut()}>Log out</h3>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

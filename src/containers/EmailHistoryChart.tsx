@@ -53,8 +53,6 @@ export function EmailHistoryChart({ chartData }: { chartData: formattedData[] })
         return date >= startDate;
     });
 
-    console.log(filteredData);
-
     return (
         <Card>
             <CardHeader className='flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row'>
