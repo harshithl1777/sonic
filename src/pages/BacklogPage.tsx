@@ -69,7 +69,7 @@ const BacklogPage = () => {
     const generateDialogContent = () => {
         if (selectedRow !== null) {
             return (
-                <DialogContent className={`${scheduleStage === 2 ? 'w-[400px]' : 'w-[700px]'} pt-8 pl-8 pr-8 pb-4`}>
+                <DialogContent className={`${scheduleStage === 2 ? 'w-[400px]' : 'w-[750px]'} pt-8 pl-8 pr-8 pb-4`}>
                     <DialogHeader className=''>
                         <DialogTitle>
                             {scheduleStage === 0

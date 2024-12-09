@@ -81,6 +81,7 @@ export default function ScheduleEmailForm({
         lab_url: row.labURL,
     });
     const [submitLoading, setSubmitLoading] = useState(false);
+    const [showCustomContentExample, setShowCustomContentExample] = useState(false);
 
     const customContentRef = useRef<HTMLTextAreaElement>(null); // Create a ref for the customContent Textarea
 
@@ -201,7 +202,7 @@ export default function ScheduleEmailForm({
 
     return (
         <Form {...form}>
-            <form onSubmit={(e) => e.preventDefault()} className='space-y-4 max-w-3xl mx-auto'>
+            <form onSubmit={(e) => e.preventDefault()} className='space-y-4 mx-auto  max-w-4xl'>
                 {stage === 0 ? (
                     <>
                         <div className='grid grid-cols-12 gap-4'>
@@ -248,7 +249,7 @@ export default function ScheduleEmailForm({
                                     <FormLabel>Custom Content</FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder='Placeholder'
+                                            placeholder='Enter your customized content here.'
                                             className='resize-none'
                                             {...field}
                                             value={form.getValues().customizedContent}
@@ -256,7 +257,18 @@ export default function ScheduleEmailForm({
                                         />
                                     </FormControl>
                                     <FormDescription>
-                                        You can add custom content personalized to the contact here.
+                                        {!showCustomContentExample ? (
+                                            'You can add custom content personalized to the contact here.'
+                                        ) : (
+                                            <span className='text-slate-400 text-[13px]'>
+                                                I read a few of your publications on polar bear BCIs and facial
+                                                asymmetry recently. Specifically, I think it's incredibly interesting
+                                                that facial asymmetry is an indicator of environmental stress,
+                                                especially considering what this reveals about the effects of climate
+                                                change. I’m really interested in getting involved with your research,
+                                                especially as someone who’s hoping to pursue Wildlife Ecology.
+                                            </span>
+                                        )}
                                     </FormDescription>
                                 </FormItem>
                             )}
@@ -270,7 +282,7 @@ export default function ScheduleEmailForm({
                                     control={form.control}
                                     name='sendAt'
                                     render={() => (
-                                        <FormItem className='flex flex-col'>
+                                        <FormItem className='flex flex-col gap-1'>
                                             <FormLabel className={sendImmediately ? 'text-slate-500' : ''}>
                                                 Delivery Date & Time
                                             </FormLabel>
@@ -292,7 +304,7 @@ export default function ScheduleEmailForm({
                                     control={form.control}
                                     name='sendImmediately'
                                     render={({ field }) => (
-                                        <FormItem className='flex flex-row items-center justify-between rounded-lg'>
+                                        <FormItem className='flex flex-row items-center justify-between rounded-lg gap-2'>
                                             <div className='space-y-1'>
                                                 <FormLabel className='text-rose-500'>Send Immediately?</FormLabel>
                                                 <FormDescription>
@@ -316,6 +328,12 @@ export default function ScheduleEmailForm({
                             </div>
                         </div>
                         <div className='flex flex-row gap-2 ml-auto !mt-8'>
+                            <Button
+                                variant='secondary'
+                                onClick={() => setShowCustomContentExample(!showCustomContentExample)}
+                            >
+                                {!showCustomContentExample ? 'Show' : 'Hide'} Example
+                            </Button>
                             <Button onClick={() => close()} className='ml-auto block' variant='secondary'>
                                 Cancel
                             </Button>
@@ -430,8 +448,22 @@ export default function ScheduleEmailForm({
                             <div className='flex flex-row gap-2 ml-auto !mt-8'>
                                 <Button
                                     onClick={() => {
-                                        if (sendImmediately) setStage(2);
-                                        else scheduleOrSendEmailSubmit('CREATE');
+                                        if (
+                                            !previewData.body ||
+                                            !previewData.subject ||
+                                            !previewData.send_at ||
+                                            previewData.subject!.includes('{LAB}')
+                                        ) {
+                                            toast({
+                                                title: 'Subject Lab Field Unfilled',
+                                                description:
+                                                    'You have not filled in the lab field in the subject. Please edit!',
+                                                variant: 'destructive',
+                                            });
+                                        } else {
+                                            if (sendImmediately) setStage(2);
+                                            else scheduleOrSendEmailSubmit('CREATE');
+                                        }
                                     }}
                                     disabled={submitLoading}
                                     aria-disabled={submitLoading}
