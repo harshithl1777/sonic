@@ -43,6 +43,7 @@ export default function ScheduleEmailForm({
     close,
     subject,
     template,
+    draft,
     attachmentURL,
     setStage,
     stage,
@@ -54,6 +55,7 @@ export default function ScheduleEmailForm({
     subject: string;
     attachmentURL: string;
     template: string;
+    draft: string;
     setStage: Function;
     stage: number;
     refreshNotionData: Function;
@@ -98,7 +100,7 @@ export default function ScheduleEmailForm({
             emailAddress: row.email,
             subject: subject,
             body: previewData.body as string,
-            customizedContent: '',
+            customizedContent: draft,
             universityName: universityDefaultNames[row.university as UniversityNames],
             sendImmediately: false,
         },

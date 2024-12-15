@@ -13,7 +13,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, ChevronDown, InboxIcon, RefreshCw, Search, Timer } from 'lucide-react';
+import { ArrowUpDown, ChevronDown, InboxIcon, NotepadText, RefreshCw, Search, Timer } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -35,11 +35,12 @@ export type Contact = {
     labURL: string;
     university: string;
 };
-
 interface BacklogTableProps {
     scheduleEmailFn: Function;
+    draftEmailFn: Function;
     refreshNotionDataFn: Function;
     data: Contact[];
+    drafts: { [email: string]: string };
     isLoading: boolean;
 }
 
@@ -58,7 +59,9 @@ const universityColors = {
 export const BacklogTable: React.FC<BacklogTableProps> = ({
     refreshNotionDataFn,
     scheduleEmailFn,
+    draftEmailFn,
     data,
+    drafts,
     isLoading,
 }) => {
     const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -101,8 +104,14 @@ export const BacklogTable: React.FC<BacklogTableProps> = ({
                 );
             },
             cell: ({ row }) => (
-                <div className='dark:text-slate-200'>
+                <div className='dark:text-slate-200 flex flex-row gap-2 items-center'>
                     <strong>{row.getValue('name')}</strong>
+                    <Tooltip>
+                        <TooltipTrigger>
+                            {row.original.email in drafts && <div className='w-2 h-2 bg-blue-500 rounded-full' />}
+                        </TooltipTrigger>
+                        <TooltipContent side='bottom'>Drafted</TooltipContent>
+                    </Tooltip>
                 </div>
             ),
         },
@@ -176,6 +185,19 @@ export const BacklogTable: React.FC<BacklogTableProps> = ({
                 return (
                     <div className='flex flex-row gap-2'>
                         <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <Button
+                                        variant='ghost'
+                                        className='h-8 w-8 bg-orange-500 text-white dark:text-slate-900 hover:bg-orange-400 hover:text-slate-900 font-semibold'
+                                        onClick={() => draftEmailFn(row.original)}
+                                    >
+                                        <span className='sr-only'>Draft</span>
+                                        <NotepadText strokeWidth={2.25} />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side='bottom'>Draft</TooltipContent>
+                            </Tooltip>
                             <Tooltip>
                                 <TooltipTrigger>
                                     <Button

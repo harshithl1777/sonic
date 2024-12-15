@@ -16,6 +16,9 @@ import ScheduleEmailForm from '@/containers/ScheduleEmailForm';
 import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
 import { useNavigate } from 'react-router-dom';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 const RESUME_NAME = 'Apekshya_Pokharel_CV.pdf';
 
@@ -27,6 +30,10 @@ const BacklogPage = () => {
     const [resumeURL, setResumeURL] = useState<string | null>(null);
     const [subject, setSubject] = useState('');
     const [selectedRow, setSelectedRow] = useState<Contact | null>(null);
+    const [draftLoading, setDraftLoading] = useState(false);
+    const [selectedDraftRow, setSelectedDraftRow] = useState<Contact | null>(null);
+    const [drafts, setDrafts] = useState<{ [email: string]: string }>({});
+    const [draft, setDraft] = useState('');
     const [scheduleStage, setScheduleStage] = useState(0);
     const [guardRails, setGuardRails] = useState(false);
     const { toast } = useToast();
@@ -46,11 +53,21 @@ const BacklogPage = () => {
         setContacts(response.data);
     };
 
+    const getSetDrafts = async () => {
+        const drafts = await supabase.from('drafts').select('*');
+        const emailToDraftMap: { [email: string]: string } = {};
+        drafts.data!.forEach((row) => {
+            emailToDraftMap[row.email as string] = row.draft;
+        });
+        setDrafts(emailToDraftMap);
+    };
+
     const getSetData = async () => {
         setLoading(true);
         await getSetNotionData();
         const { data } = await supabase.from('global').select('*').eq('email', 'apekshyapokharel@gmail.com');
         const pendingEmails = await supabase.from('emails').select('*').eq('status', 'PENDING');
+        await getSetDrafts();
 
         setPendingEmailsCount(pendingEmails.data!.length);
         setTemplate(data![0].template);
@@ -63,6 +80,7 @@ const BacklogPage = () => {
             const resumeResponse = supabase.storage.from('resumes').getPublicUrl(RESUME_NAME);
             setResumeURL(resumeResponse.data.publicUrl);
         }
+
         setLoading(false);
     };
 
@@ -90,6 +108,7 @@ const BacklogPage = () => {
                                 template={template}
                                 subject={subject}
                                 row={selectedRow}
+                                draft={selectedRow.email in drafts ? drafts[selectedRow.email] : ''}
                                 close={() => {
                                     setSelectedRow(null);
                                     setScheduleStage(0);
@@ -110,6 +129,61 @@ const BacklogPage = () => {
         }
     };
 
+    const saveDraftSubmit = async () => {
+        try {
+            setDraftLoading(true);
+            const { error } = await supabase
+                .from('drafts')
+                .upsert({ email: selectedDraftRow!.email, draft }, { onConflict: 'email' });
+            if (error) throw new Error();
+            toast({
+                title: 'Draft Saved!',
+            });
+            setDraft('');
+            setSelectedDraftRow(null);
+        } catch (error) {
+            console.error(error);
+            toast({
+                title: 'Unable to Save Draft',
+                description: 'Something went wrong. Please try again later.',
+                variant: 'destructive',
+            });
+        } finally {
+            await getSetDrafts();
+            setDraftLoading(false);
+        }
+    };
+
+    type UniversityNames = 'Waterloo' | 'Toronto' | 'Western' | 'McMaster' | 'Laurier' | 'Queens' | 'Manitoba';
+
+    const universityDefaultNames: Record<UniversityNames, string> = {
+        Waterloo: 'the University of Waterloo',
+        Toronto: 'the University of Toronto',
+        Western: 'Western University',
+        McMaster: 'McMaster University',
+        Laurier: 'Wilfrid Laurier University',
+        Queens: 'Queens University',
+        Manitoba: 'the University of Manitoba',
+    };
+
+    function fillPlaceholders(emailText: string, name: string, university: UniversityNames, stage: 1 | 2) {
+        const text = emailText.split('{CUSTOM}')[stage - 1];
+        const lastName = name.split(' ').at(-1);
+        const universityReplacement = universityDefaultNames[university];
+
+        const namePattern = /\[NAME\]/g;
+        const universityThePattern = /\b(?:the\s+)*\[UNIVERSITY\]/gi;
+        const universityRegularPattern = /\[UNIVERSITY\]/g;
+
+        const processedText = text
+            .replace(namePattern, `Dr. ${lastName}`)
+            .replace(universityThePattern, universityReplacement)
+            .replace(universityRegularPattern, universityReplacement)
+            .trim();
+
+        return processedText;
+    }
+
     return (
         <div className='ml-2 mr-2 mt-5 space-y-6'>
             <Dialog
@@ -123,6 +197,56 @@ const BacklogPage = () => {
             >
                 {generateDialogContent()}
             </Dialog>
+            <Dialog open={selectedDraftRow !== null} onOpenChange={() => {}}>
+                {selectedDraftRow !== null && (
+                    <DialogContent className={`w-[750px] pt-8 pl-8 pr-8 pb-4 [&>button]:hidden`}>
+                        <DialogHeader className=''>
+                            <DialogTitle>Draft Email</DialogTitle>
+                            <DialogDescription className='!mb-2'>
+                                Start drafting your cold email below with the formatted full email template visible.
+                            </DialogDescription>
+                            <div className='!mt-4 whitespace-pre-line text-sm text-slate-300 !ml-2'>
+                                {fillPlaceholders(
+                                    template,
+                                    selectedDraftRow.name,
+                                    selectedDraftRow.university as UniversityNames,
+                                    1,
+                                )}
+                                <Textarea
+                                    className='w-full h-24 !my-4'
+                                    placeholder='Enter your customized content here..'
+                                    value={draft}
+                                    onChange={(e) => setDraft(e.target.value)}
+                                />
+                                {fillPlaceholders(
+                                    template,
+                                    selectedDraftRow.name,
+                                    selectedDraftRow.university as UniversityNames,
+                                    2,
+                                )}
+                            </div>
+                        </DialogHeader>
+                        <DialogFooter className='!my-4'>
+                            <Button
+                                onClick={() => {
+                                    setDraft('');
+                                    setSelectedDraftRow(null);
+                                }}
+                                className='bg-slate-600 hover:bg-slate-500 mr-auto block'
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={saveDraftSubmit}
+                                className='bg-orange-500 hover:bg-orange-400 ml-auto flex flex-row gap-2'
+                            >
+                                {draftLoading && <Loader2 className='animate-spin' />}
+                                {draftLoading ? 'Saving' : 'Save'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                )}
+            </Dialog>
             <div>
                 <h3 className='text-lg font-medium'>Backlog</h3>
                 <p className='text-sm text-muted-foreground'>Schedule and view emails in backlog.</p>
@@ -130,6 +254,7 @@ const BacklogPage = () => {
             <Separator className='mb-0' />
             <BacklogTable
                 data={contacts}
+                drafts={drafts}
                 scheduleEmailFn={(row: Contact) => {
                     if (template && resumeURL) {
                         if (pendingEmails && pendingEmails! > 25) {
@@ -153,6 +278,24 @@ const BacklogPage = () => {
                                 </ToastAction>
                             ),
                         });
+                    }
+                }}
+                draftEmailFn={(row: Contact) => {
+                    if (!(template && resumeURL)) {
+                        console.log();
+                        toast({
+                            title: 'Template or Resume Missing.',
+                            description: 'Add a template & resume in settings to schedule an email.',
+                            variant: 'destructive',
+                            action: (
+                                <ToastAction onClick={() => navigate('/app/settings')} altText='Settings'>
+                                    Settings
+                                </ToastAction>
+                            ),
+                        });
+                    } else {
+                        if (row.email in drafts) setDraft(drafts[row.email]);
+                        setSelectedDraftRow(row);
                     }
                 }}
                 isLoading={loading}
