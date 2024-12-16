@@ -47,7 +47,6 @@ export function CancelEmailForm({
                 },
             });
             if (!data.success) {
-                console.log(data);
                 toast({
                     title: 'Something went wrong!',
                     description: "Your email couldn't be cancelled. Please try again later.",

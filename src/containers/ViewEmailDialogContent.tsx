@@ -39,7 +39,6 @@ const formSchema = z.object({
 
 export const ViewEmailDialogContent = ({ row, close }: { row: Row; close: Function }) => {
     const form = useForm<z.infer<typeof formSchema>>({ resolver: zodResolver(formSchema) });
-    console.log(row);
 
     return (
         <DialogContent className='p-8 w-fit'>

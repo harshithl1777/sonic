@@ -91,7 +91,6 @@ export function UpdateEmailForm({
                     },
                 });
                 if (!data.success) {
-                    console.log(data);
                     toast({
                         title: 'Something went wrong!',
                         description: "Your email couldn't be updated. Please try again later.",

@@ -453,7 +453,6 @@ export default function ScheduleEmailForm({
                                         if (
                                             !previewData.body ||
                                             !previewData.subject ||
-                                            !previewData.send_at ||
                                             previewData.subject!.includes('{LAB}')
                                         ) {
                                             toast({

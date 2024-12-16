@@ -130,9 +130,9 @@ const DashboardPage = () => {
 
         data!.forEach(({ created_at, status, university }) => {
             if (status === 'PENDING') {
-                completedData.push({ created_at: new Date(created_at), status, university });
-            } else if (status === 'COMPLETED') {
                 scheduledData.push({ created_at: new Date(created_at), status, university });
+            } else if (status === 'COMPLETED') {
+                completedData.push({ created_at: new Date(created_at), status, university });
             }
 
             universityCountsMap[university as UniversityNames]++;
@@ -201,7 +201,7 @@ const DashboardPage = () => {
                             <div>
                                 <CardTitle className='text-sm text-slate-700 dark:text-indigo-400'>Scheduled</CardTitle>
                                 <h2 className='text-3xl mt-2 font-bold text-slate-700 dark:text-indigo-200'>
-                                    {counts.completed}
+                                    {counts.scheduled}
                                     <span className='text-sm ml-1'> emails</span>
                                 </h2>
                                 <p className='text-indigo-400 text-md font-semibold mt-1'>Via DB</p>

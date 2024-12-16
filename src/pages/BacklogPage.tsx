@@ -282,7 +282,6 @@ const BacklogPage = () => {
                 }}
                 draftEmailFn={(row: Contact) => {
                     if (!(template && resumeURL)) {
-                        console.log();
                         toast({
                             title: 'Template or Resume Missing.',
                             description: 'Add a template & resume in settings to schedule an email.',
