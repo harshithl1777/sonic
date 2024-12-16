@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
-import { Trash2Icon } from 'lucide-react';
+import { Loader2, Trash2Icon } from 'lucide-react';
 
 type Row = {
     name: string;
@@ -83,8 +83,13 @@ export function CancelEmailForm({
             >
                 Nevermind
             </Button>
-            <Button onClick={() => cancelEmailSubmit()} className='w-full bg-rose-700' variant='destructive'>
-                {!submitLoading && <Trash2Icon />}
+            <Button
+                disabled={submitLoading}
+                onClick={() => cancelEmailSubmit()}
+                className='w-full bg-rose-700'
+                variant='destructive'
+            >
+                {!submitLoading ? <Trash2Icon /> : <Loader2 className='animate-spin' />}
                 {!submitLoading ? "I'm sure!" : 'Cancelling'}
             </Button>
         </div>
