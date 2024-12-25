@@ -34,10 +34,7 @@ export function CancelEmailForm({
     const [submitLoading, setSubmitLoading] = useState(false);
 
     const cancelEmailSubmit = async () => {
-        const requestBody = {
-            action: 'DELETE',
-            triggerID: row.trigger_id,
-        };
+        const requestBody = { action: 'DELETE', triggerID: row.trigger_id };
         try {
             setSubmitLoading(true);
             setGuardRails(true);

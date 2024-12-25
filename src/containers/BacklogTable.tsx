@@ -34,6 +34,7 @@ export type Contact = {
     email: string;
     labURL: string;
     university: string;
+    status: string;
 };
 interface BacklogTableProps {
     scheduleEmailFn: Function;
@@ -69,6 +70,20 @@ export const BacklogTable: React.FC<BacklogTableProps> = ({
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
     const [pageIndex, setPageIndex] = React.useState(0);
+    const [filteredData, setFilteredData] = React.useState(data);
+    const [view, setView] = React.useState('All');
+
+    React.useEffect(() => {
+        if (view === 'Drafted') {
+            const res = data.filter((contact) => contact.email in drafts && contact.status === 'Email');
+            setFilteredData(res);
+        } else if (view === 'Stalled') {
+            const res = data.filter((contact) => contact.status === 'Stalled');
+            setFilteredData(res);
+        } else {
+            setFilteredData(data);
+        }
+    }, [data, drafts, view]);
 
     const columns: ColumnDef<Contact>[] = [
         {
@@ -108,9 +123,17 @@ export const BacklogTable: React.FC<BacklogTableProps> = ({
                     <strong>{row.getValue('name')}</strong>
                     <Tooltip>
                         <TooltipTrigger>
-                            {row.original.email in drafts && <div className='w-2 h-2 bg-blue-500 rounded-full' />}
+                            {row.original.email in drafts ? (
+                                <div className='w-2 h-2 bg-blue-500 rounded-full' />
+                            ) : (
+                                row.original.status === 'Stalled' && (
+                                    <div className='w-2 h-2 bg-orange-500 rounded-full' />
+                                )
+                            )}
                         </TooltipTrigger>
-                        <TooltipContent side='bottom'>Drafted</TooltipContent>
+                        <TooltipContent side='bottom'>
+                            {row.original.status === 'Stalled' ? 'Stalled' : 'Drafted'}
+                        </TooltipContent>
                     </Tooltip>
                 </div>
             ),
@@ -221,7 +244,7 @@ export const BacklogTable: React.FC<BacklogTableProps> = ({
     const [pageSize, setPageSize] = React.useState(5);
 
     const table = useReactTable({
-        data,
+        data: filteredData,
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -257,6 +280,27 @@ export const BacklogTable: React.FC<BacklogTableProps> = ({
                     <Button variant='outline' disabled={isLoading} onClick={() => refreshNotionDataFn()}>
                         Refresh <RefreshCw />
                     </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant='outline'>
+                                {view} <ChevronDown />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                            {['All', 'Drafted', 'Stalled'].map((viewOption) => {
+                                return (
+                                    <DropdownMenuCheckboxItem
+                                        key={viewOption}
+                                        className='capitalize'
+                                        checked={view === viewOption}
+                                        onClick={() => setView(viewOption)}
+                                    >
+                                        {viewOption}
+                                    </DropdownMenuCheckboxItem>
+                                );
+                            })}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant='outline'>

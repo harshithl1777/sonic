@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
             const allRows = [];
             let nextCursor = undefined; // Initialize cursor for pagination
             const url = new URL(req.url);
-            const statusFilter = url.searchParams.get('status');
+            const statusFilter = url.searchParams.get('status')?.split(',') || [];
 
             // Loop through all pages until there is no next_cursor
             do {
@@ -62,10 +62,12 @@ Deno.serve(async (req) => {
                     },
                     body: JSON.stringify({
                         filter: {
-                            property: 'Status',
-                            status: {
-                                equals: statusFilter,
-                            },
+                            or: statusFilter.map((status) => ({
+                                property: 'Status',
+                                status: {
+                                    equals: status.trim(), // Trim to ensure clean inputs
+                                },
+                            })),
                         },
                         ...(nextCursor ? { start_cursor: nextCursor } : {}),
                     }),

@@ -1,5 +1,5 @@
 import { BacklogTable, Contact } from '@/containers/BacklogTable';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useState } from 'react';
 import supabase from '@/config/supabase';
 import {
@@ -19,8 +19,13 @@ import { useNavigate } from 'react-router-dom';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import dayjs from 'dayjs';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const RESUME_NAME = 'Apekshya_Pokharel_CV.pdf';
+
+dayjs.extend(relativeTime);
 
 const BacklogPage = () => {
     const [contacts, setContacts] = useState([]);
@@ -34,6 +39,7 @@ const BacklogPage = () => {
     const [selectedDraftRow, setSelectedDraftRow] = useState<Contact | null>(null);
     const [drafts, setDrafts] = useState<{ [email: string]: string }>({});
     const [draft, setDraft] = useState('');
+    const [saved, setSaved] = useState(true);
     const [scheduleStage, setScheduleStage] = useState(0);
     const [guardRails, setGuardRails] = useState(false);
     const { toast } = useToast();
@@ -45,7 +51,7 @@ const BacklogPage = () => {
 
     const getSetNotionData = async () => {
         const response = await supabase.functions.invoke(
-            import.meta.env.VITE_SUPABASE_EDGE_FUNCTION_NAME + '?status=Email',
+            import.meta.env.VITE_SUPABASE_EDGE_FUNCTION_NAME + '?status=Email,Stalled',
             {
                 method: 'POST',
             },
@@ -129,18 +135,14 @@ const BacklogPage = () => {
         }
     };
 
-    const saveDraftSubmit = async () => {
+    const saveDraftSubmit = async (newDraft: string) => {
         try {
             setDraftLoading(true);
             const { error } = await supabase
                 .from('drafts')
-                .upsert({ email: selectedDraftRow!.email, draft }, { onConflict: 'email' });
+                .upsert({ email: selectedDraftRow!.email, draft: newDraft }, { onConflict: 'email' });
+            setSaved(true);
             if (error) throw new Error();
-            toast({
-                title: 'Draft Saved!',
-            });
-            setDraft('');
-            setSelectedDraftRow(null);
         } catch (error) {
             console.error(error);
             toast({
@@ -152,6 +154,22 @@ const BacklogPage = () => {
             await getSetDrafts();
             setDraftLoading(false);
         }
+    };
+
+    const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const newValue = e.target.value;
+        setDraft(newValue);
+        setSaved(false);
+
+        if (debounceTimer.current) {
+            clearTimeout(debounceTimer.current);
+        }
+
+        debounceTimer.current = setTimeout(async () => {
+            await saveDraftSubmit(newValue);
+        }, 1500);
     };
 
     type UniversityNames = 'Waterloo' | 'Toronto' | 'Western' | 'McMaster' | 'Laurier' | 'Queens' | 'Manitoba';
@@ -201,7 +219,17 @@ const BacklogPage = () => {
                 {selectedDraftRow !== null && (
                     <DialogContent className={`w-[750px] pt-8 pl-8 pr-8 pb-4 [&>button]:hidden`}>
                         <DialogHeader className=''>
-                            <DialogTitle>Draft Email</DialogTitle>
+                            <DialogTitle className='flex items-center gap-2'>
+                                {saved && (
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <div className='w-2 h-2 bg-blue-500 rounded-full' />
+                                        </TooltipTrigger>
+                                        <TooltipContent side='bottom'>Unsaved</TooltipContent>
+                                    </Tooltip>
+                                )}
+                                Draft Email
+                            </DialogTitle>
                             <DialogDescription className='!mb-2'>
                                 Start drafting your cold email below with the formatted full email template visible.
                             </DialogDescription>
@@ -214,9 +242,10 @@ const BacklogPage = () => {
                                 )}
                                 <Textarea
                                     className='w-full h-24 !my-4'
+                                    id='customContent'
                                     placeholder='Enter your customized content here..'
                                     value={draft}
-                                    onChange={(e) => setDraft(e.target.value)}
+                                    onChange={(e) => handleChange(e)}
                                 />
                                 {fillPlaceholders(
                                     template,
@@ -229,19 +258,43 @@ const BacklogPage = () => {
                         <DialogFooter className='!my-4'>
                             <Button
                                 onClick={() => {
-                                    setDraft('');
-                                    setSelectedDraftRow(null);
+                                    if (saved) {
+                                        toast({
+                                            title: 'Draft Unsaved',
+                                            description:
+                                                "Your draft couldn't be saved. Are you sure you want to leave?",
+                                            action: (
+                                                <Button
+                                                    variant='outline'
+                                                    className='bg-transparent border-white hover:bg-transparent hover:brightness-90'
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(draft);
+                                                        setDraft('');
+                                                        setSelectedDraftRow(null);
+                                                        setSaved(true);
+                                                        toast({
+                                                            title: 'Content Copied',
+                                                            description:
+                                                                'Just in case, your draft has been copied to your clipboard. 🙂',
+                                                        });
+                                                    }}
+                                                >
+                                                    Yes
+                                                </Button>
+                                            ),
+                                            variant: 'destructive',
+                                        });
+                                    } else {
+                                        setDraft('');
+                                        setSelectedDraftRow(null);
+                                        setSaved(true);
+                                    }
                                 }}
-                                className='bg-slate-600 hover:bg-slate-500 mr-auto block'
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={saveDraftSubmit}
-                                className='bg-orange-500 hover:bg-orange-400 ml-auto flex flex-row gap-2'
+                                className='bg-slate-600 hover:bg-slate-500 w-full flex flex-row gap-2'
+                                disabled={draftLoading}
                             >
                                 {draftLoading && <Loader2 className='animate-spin' />}
-                                {draftLoading ? 'Saving' : 'Save'}
+                                {draftLoading ? 'Saving' : 'Close'}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
