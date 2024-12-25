@@ -77,6 +77,17 @@ export const PendingTable: React.FC<PendingTableProps> = ({
     });
     const [rowSelection, setRowSelection] = React.useState({});
     const [pageIndex, setPageIndex] = React.useState(0);
+    const [filteredData, setFilteredData] = React.useState(data);
+    const [university, setUniversity] = React.useState('All Universities');
+
+    React.useEffect(() => {
+        let filteringData = data;
+        if (university !== 'All Universities') {
+            filteringData = filteringData.filter((contact) => contact.university === university);
+        }
+
+        setFilteredData(filteringData);
+    }, [data, university]);
 
     const columns: ColumnDef<Contact>[] = [
         {
@@ -176,11 +187,16 @@ export const PendingTable: React.FC<PendingTableProps> = ({
                     </Button>
                 );
             },
-            cell: ({ row }) => (
-                <div className='flex flex-row items-center gap-2 lowercase hover:cursor-pointer p-2 w-fit underline dark:text-slate-400 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-sm'>
-                    <a onClick={() => window.open(row.getValue('labURL'))}>{row.getValue('labURL')}</a>
-                </div>
-            ),
+            cell: ({ row }) =>
+                row.original.labURL ? (
+                    <div className='flex flex-row ml-[-8px] items-center gap-2 hover:cursor-pointer p-2 w-fit underline dark:text-slate-400 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-sm'>
+                        <a onClick={() => window.open(row.getValue('labURL'))}>Click to Open</a>
+                    </div>
+                ) : (
+                    <div className='flex flex-row ml-[-8px] items-center gap-2 p-2 w-fit text-slate-500'>
+                        No Lab URL Found
+                    </div>
+                ),
         },
         {
             accessorKey: 'university',
@@ -260,7 +276,7 @@ export const PendingTable: React.FC<PendingTableProps> = ({
     const [pageSize, setPageSize] = React.useState(5);
 
     const table = useReactTable({
-        data,
+        data: filteredData,
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -296,6 +312,36 @@ export const PendingTable: React.FC<PendingTableProps> = ({
                     <Button variant='outline' disabled={isLoading} onClick={() => refreshDBDataFn()}>
                         Refresh <RefreshCw />
                     </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant='outline'>
+                                {university} <ChevronDown />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                            {[
+                                'All Universities',
+                                'Waterloo',
+                                'Toronto',
+                                'Western',
+                                'McMaster',
+                                'Laurier',
+                                'Queens',
+                                'Manitoba',
+                            ].map((universityOption) => {
+                                return (
+                                    <DropdownMenuCheckboxItem
+                                        key={universityOption}
+                                        className='capitalize'
+                                        checked={university === universityOption}
+                                        onClick={() => setUniversity(universityOption)}
+                                    >
+                                        {universityOption}
+                                    </DropdownMenuCheckboxItem>
+                                );
+                            })}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant='outline'>

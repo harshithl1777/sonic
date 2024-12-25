@@ -71,19 +71,24 @@ export const BacklogTable: React.FC<BacklogTableProps> = ({
     const [rowSelection, setRowSelection] = React.useState({});
     const [pageIndex, setPageIndex] = React.useState(0);
     const [filteredData, setFilteredData] = React.useState(data);
+    const [pageSize, setPageSize] = React.useState(10);
     const [view, setView] = React.useState('All');
+    const [university, setUniversity] = React.useState('All Universities');
 
     React.useEffect(() => {
+        let filteringData = data;
         if (view === 'Drafted') {
-            const res = data.filter((contact) => contact.email in drafts && contact.status === 'Email');
-            setFilteredData(res);
+            filteringData = data.filter((contact) => contact.email in drafts && contact.status === 'Email');
         } else if (view === 'Stalled') {
-            const res = data.filter((contact) => contact.status === 'Stalled');
-            setFilteredData(res);
-        } else {
-            setFilteredData(data);
+            filteringData = data.filter((contact) => contact.status === 'Stalled');
         }
-    }, [data, drafts, view]);
+
+        if (university !== 'All Universities') {
+            filteringData = filteringData.filter((contact) => contact.university === university);
+        }
+
+        setFilteredData(filteringData);
+    }, [data, drafts, view, university]);
 
     const columns: ColumnDef<Contact>[] = [
         {
@@ -195,11 +200,16 @@ export const BacklogTable: React.FC<BacklogTableProps> = ({
                     </Button>
                 );
             },
-            cell: ({ row }) => (
-                <div className='flex flex-row ml-[-8px] items-center gap-2 hover:cursor-pointer p-2 w-fit underline dark:text-slate-400 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-sm'>
-                    <a onClick={() => window.open(row.getValue('labURL'))}>Click to Open</a>
-                </div>
-            ),
+            cell: ({ row }) =>
+                row.original.labURL ? (
+                    <div className='flex flex-row ml-[-8px] items-center gap-2 hover:cursor-pointer p-2 w-fit underline dark:text-slate-400 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-sm'>
+                        <a onClick={() => window.open(row.getValue('labURL'))}>Click to Open</a>
+                    </div>
+                ) : (
+                    <div className='flex flex-row ml-[-8px] items-center gap-2 p-2 w-fit text-slate-500'>
+                        No Lab URL Found
+                    </div>
+                ),
         },
         {
             id: 'actions',
@@ -241,8 +251,6 @@ export const BacklogTable: React.FC<BacklogTableProps> = ({
         },
     ];
 
-    const [pageSize, setPageSize] = React.useState(5);
-
     const table = useReactTable({
         data: filteredData,
         columns,
@@ -280,6 +288,36 @@ export const BacklogTable: React.FC<BacklogTableProps> = ({
                     <Button variant='outline' disabled={isLoading} onClick={() => refreshNotionDataFn()}>
                         Refresh <RefreshCw />
                     </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant='outline'>
+                                {university} <ChevronDown />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                            {[
+                                'All Universities',
+                                'Waterloo',
+                                'Toronto',
+                                'Western',
+                                'McMaster',
+                                'Laurier',
+                                'Queens',
+                                'Manitoba',
+                            ].map((universityOption) => {
+                                return (
+                                    <DropdownMenuCheckboxItem
+                                        key={universityOption}
+                                        className='capitalize'
+                                        checked={university === universityOption}
+                                        onClick={() => setUniversity(universityOption)}
+                                    >
+                                        {universityOption}
+                                    </DropdownMenuCheckboxItem>
+                                );
+                            })}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant='outline'>
